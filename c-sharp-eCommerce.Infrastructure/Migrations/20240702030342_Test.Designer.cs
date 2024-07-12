@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using c_sharp_eCommerce.Infrastructure.Data;
 
@@ -10,9 +11,10 @@ using c_sharp_eCommerce.Infrastructure.Data;
 namespace c_sharp_eCommerce.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240702030342_Test")]
+    partial class Test
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,7 +37,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("c_shap_eCommerce.Core.Models.Order", b =>
@@ -61,7 +63,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("c_shap_eCommerce.Core.Models.OrderDetails", b =>
@@ -87,7 +89,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderDetails", (string)null);
+                    b.ToTable("OrderDetails");
                 });
 
             modelBuilder.Entity("c_shap_eCommerce.Core.Models.Product", b =>
@@ -118,7 +120,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("c_shap_eCommerce.Core.Models.User", b =>
@@ -149,7 +151,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("c_shap_eCommerce.Core.Models.Order", b =>
@@ -172,7 +174,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("c_shap_eCommerce.Core.Models.Product", "Product")
-                        .WithMany()
+                        .WithMany("OrderDetails")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -199,6 +201,11 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("c_shap_eCommerce.Core.Models.Order", b =>
+                {
+                    b.Navigation("OrderDetails");
+                });
+
+            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Product", b =>
                 {
                     b.Navigation("OrderDetails");
                 });

@@ -1,4 +1,7 @@
 ﻿using c_shap_eCommerce.Core.IRepositories;
+using c_shap_eCommerce.Core.Models;
+using c_sharp_eCommerce.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,33 +12,49 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 {
     public class GenericRepository<TModel> : IGenericRepository<TModel> where TModel : class
     {
-        public void Create(TModel model)
+        private readonly AppDbContext appDbContext;
+        public GenericRepository(AppDbContext AppDbContext) {
+            this.appDbContext = AppDbContext;
+        }
+        
+
+        public async Task Create(TModel model)
         {
-            Console.WriteLine("Create");
-            throw new NotImplementedException();
+            await appDbContext.Set<TModel>().AddAsync(model);
         }
 
-        public void Delete(int id)
+        public async Task<bool> Delete(int id)
         {
-            Console.WriteLine("Delete");
-            throw new NotImplementedException();
+            var model = await appDbContext.Set<TModel>().FindAsync(id);
+            if(model is null)
+            {
+                return false;
+            }
+            appDbContext.Set<TModel>().Remove(model);
+            return true;
         }
 
-        public IEnumerable<TModel> GetAll()
+        public async Task<IEnumerable<TModel>> GetAll()
         {
-            Console.WriteLine("Get All");
-            throw new NotImplementedException();
+            if(typeof(TModel) == typeof(Product))
+            {
+                var products = await appDbContext.Products.Include(prod=>prod.Category).ToListAsync();
+                return products as IEnumerable<TModel>;
+            }
+            var instance = await appDbContext.Set<TModel>().ToListAsync<TModel>();
+            return instance;
         }
 
-        public int GetById(int id)
+        public async Task<TModel> GetById(int id)
         {
-            Console.WriteLine("Get By Id");
-            throw new NotImplementedException();
+            var model = await appDbContext.Set<TModel>().FindAsync(id);
+            return model;
         }
 
-        public void Update(TModel model)
+        public async Task Update(TModel model)
         {
-            Console.WriteLine("Update");
+            appDbContext.Set<TModel>().Update(model);
+            appDbContext.SaveChanges();
             throw new NotImplementedException();
         }
     }

@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace c_shap_eCommerce.Core.IRepositories
 {
-    public interface IProductsRepository
+    public interface IProductsRepository : IGenericRepository<Product>
     {
-
+        public Task<IEnumerable<Product>> GetProductsByCategoryId(int CategoryId);
     }
 }

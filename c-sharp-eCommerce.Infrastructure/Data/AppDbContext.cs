@@ -10,12 +10,20 @@ namespace c_sharp_eCommerce.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Product> Products { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderDetails> OrderDetails { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-
+            
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<OrderDetails>().HasKey(model => new { model.Id, model.OrderId, model.ProductId });
+            // composite key of Id & OrderId & ProductId
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

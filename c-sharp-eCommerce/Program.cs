@@ -1,7 +1,10 @@
 using c_shap_eCommerce.Core.IRepositories;
 using c_sharp_eCommerce.Infrastructure.Data;
 using c_sharp_eCommerce.Infrastructure.Repositories;
+using c_sharp_eCommerce.Mapping;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace c_sharp_eCommerce
 {
@@ -10,7 +13,9 @@ namespace c_sharp_eCommerce
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseMySQL(builder.Configuration.GetConnectionString("LocalConfiguration"))
+            );
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -18,8 +23,17 @@ namespace c_sharp_eCommerce
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            //builder.Services.AddScoped(typeof(IProductsRepository), typeof(ProductsRepository));
-            
+            builder.Services.AddScoped(typeof(IProductsRepository), typeof(ProductsRepository));
+            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            builder.Services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
+            JsonSerializerOptions options = new()
+            {
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                WriteIndented = true
+            };
+
+
             var app = builder.Build();
             
             // Configure the HTTP request pipeline.
