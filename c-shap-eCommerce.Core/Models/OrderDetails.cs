@@ -16,6 +16,7 @@ namespace c_shap_eCommerce.Core.Models
 
         [ForeignKey(nameof(Product))]
         public int ProductId { get; set; }
+        [Column(TypeName = "decimal(18,4)")]
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public Order? Order { get; set; }

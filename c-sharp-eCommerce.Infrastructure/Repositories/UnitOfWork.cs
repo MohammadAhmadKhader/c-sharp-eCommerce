@@ -15,9 +15,20 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
         {
             this.appDbCpntext = AppDbContext;
             productRepository = new ProductsRepository(AppDbContext);
+            categoryRepository = new CategoriesRepository(AppDbContext);
         }
-        public IProductsRepository productRepository { get;set; }
+        public IProductsRepository productRepository { get; set; }
+        public ICategoriesRepository categoryRepository { get; set; }
         public int save() => appDbCpntext.SaveChanges();
-        public async Task<int> saveAsync() => await appDbCpntext.SaveChangesAsync();
+        public async Task<int> saveAsync(){
+            try
+            {
+                return await appDbCpntext.SaveChangesAsync();
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+                return 0;
+            }
+        }
     }
 }

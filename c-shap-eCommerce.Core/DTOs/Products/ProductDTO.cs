@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace c_shap_eCommerce.Core.DTOs
+namespace c_shap_eCommerce.Core.DTOs.Products
 {
     public class ProductDTO
     {

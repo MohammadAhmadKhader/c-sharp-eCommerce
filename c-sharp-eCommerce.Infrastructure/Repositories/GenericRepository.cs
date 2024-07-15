@@ -2,6 +2,7 @@
 using c_shap_eCommerce.Core.Models;
 using c_sharp_eCommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,15 +35,34 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<IEnumerable<TModel>> GetAll()
+        public async Task<IEnumerable<TModel>> GetAll(int Page,int Limit,string[]? IncludedProperty)
         {
-            if(typeof(TModel) == typeof(Product))
+            //if(typeof(TModel) == typeof(Product))
+            //{
+            //    var products = await appDbContext.Products.Include(prod=>prod.Category).ToListAsync();
+            //    return products as IEnumerable<TModel>;
+            //}
+
+            IQueryable<TModel> query = appDbContext.Set<TModel>();
+            if(IncludedProperty is not null)
             {
-                var products = await appDbContext.Products.Include(prod=>prod.Category).ToListAsync();
-                return products as IEnumerable<TModel>;
+                foreach(var property in IncludedProperty)
+                {
+                    query = query.Include(property);
+                }
             }
-            var instance = await appDbContext.Set<TModel>().ToListAsync<TModel>();
-            return instance;
+
+            if (Page <= 0 && Limit < 2)
+            {
+                Page = 1;
+                Limit = 9;
+            }
+
+            query = query.OrderBy(x => x).Skip((Page - 1) * Limit).Take(Limit);
+            // OrderBy(x => x) will order by primary key
+            return await query.ToListAsync();
+            //var instance = await appDbContext.Set<TModel>().ToListAsync<TModel>();
+            //return instance;
         }
 
         public async Task<TModel> GetById(int id)
@@ -51,11 +71,22 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
             return model;
         }
 
-        public async Task Update(TModel model)
+        public async Task Update(object PK,Action<TModel> UpdateResource)
         {
-            appDbContext.Set<TModel>().Update(model);
-            appDbContext.SaveChanges();
-            throw new NotImplementedException();
+            try
+            {
+                var resource = await appDbContext.Set<TModel>().FindAsync(PK);
+                if (resource is null)
+                {
+                    throw new ArgumentException($"{typeof(TModel).Name} was not found.");
+                }
+
+                UpdateResource(resource);
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+            
         }
     }
 }
