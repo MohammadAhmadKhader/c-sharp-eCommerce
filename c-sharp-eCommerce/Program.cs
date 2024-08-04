@@ -6,6 +6,15 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using c_sharp_eCommerce.Infrastructure.Helpers;
+using c_shap_eCommerce.Core.DTOs.ApiResponseHandlers;
+using c_shap_eCommerce.Core.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using c_shap_eCommerce.Core.IServices;
+using c_sharp_eCommerce.Services;
 
 namespace c_sharp_eCommerce
 {
@@ -37,7 +46,54 @@ namespace c_sharp_eCommerce
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             builder.Services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
             builder.Services.AddAutoMapper(typeof(MappingProfile));
-            
+            builder.Services.AddScoped(typeof(IUsersRepository), typeof(UsersRepository));
+			builder.Services.AddScoped(typeof(ITokenService), typeof(TokenService));
+			builder.Services.AddScoped(typeof(IEmailService), typeof(EmailService));
+
+			builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+            {
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireDigit = false;
+                options.Password.RequiredUniqueChars = 0;
+                options.Password.RequireNonAlphanumeric = false;
+			}).AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
+
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = TimeSpan.FromMinutes(30);
+            });
+
+            var key = builder.Configuration.GetValue<string>("ApiSettings:JWTSecretKey");
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters {
+                    ValidateIssuer = false,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+                };
+            });
+
+
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = (ActionContext) =>
+                {
+                    var errorsMessages = ValidationHelper.GetValidationErrors(ActionContext);
+                    var response = new ApiValidationResponse(System.Net.HttpStatusCode.BadRequest,errorsMessages);
+
+                    return new BadRequestObjectResult(response);
+                };
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -45,12 +101,12 @@ namespace c_sharp_eCommerce
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+			}
             
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
+            
             app.MapControllers();
 
             app.Run();

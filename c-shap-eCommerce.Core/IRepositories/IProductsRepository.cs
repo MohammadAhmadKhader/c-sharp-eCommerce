@@ -10,5 +10,6 @@ namespace c_shap_eCommerce.Core.IRepositories
     public interface IProductsRepository : IGenericRepository<Product>
     {
         public Task<IEnumerable<Product>> GetProductsByCategoryId(int CategoryId);
+        public Task<Product> GetProductById(int Id);
     }
 }

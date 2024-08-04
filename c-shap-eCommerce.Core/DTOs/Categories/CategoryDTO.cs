@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace c_shap_eCommerce.Core.DTOs.Categories
 {
-    public class CategoryDTO
+    public class CategoryDto
     {
         public int Id { get; set; }
         public string Name { get; set; }

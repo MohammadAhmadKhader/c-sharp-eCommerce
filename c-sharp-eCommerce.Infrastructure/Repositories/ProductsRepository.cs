@@ -30,6 +30,13 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 
             return products;
         }
+        public async Task<Product> GetProductById(int Id)
+        {
+            var product = await appDbContext.Products
+                .Include(prod => prod.Category)
+                .FirstOrDefaultAsync(x=>x.Id == Id);
+            return product;
+        }
         
     }
 }

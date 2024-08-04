@@ -5,9 +5,8 @@ using c_shap_eCommerce.Core.Models;
 using c_sharp_eCommerce.Infrastructure.Data;
 using c_sharp_eCommerce.Infrastructure.Helpers;
 using c_sharp_eCommerce.Infrastructure.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace c_sharp_eCommerce.Controllers
@@ -17,109 +16,114 @@ namespace c_sharp_eCommerce.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IUnitOfWork<Product> unitOfWork;
-        private ApiResponse response;
-        private IMapper mapper;
+        private readonly IMapper mapper;
 
         public ProductsController(IUnitOfWork<Product> UnitOfWork, IMapper mapper)
         {
             this.unitOfWork = UnitOfWork;
             this.mapper = mapper;
-            response = new ApiResponse();
         }
 
         [HttpGet]
-        public async Task<ActionResult<ApiResponse>> GetAllProducts(int Page, int Limit)
+        public async Task<ActionResult<ApiResponse>> GetAllProducts([FromQuery] int Page = PaginationHelper.DefaultPage, [FromQuery] int Limit = PaginationHelper.DefaultLimit)
         {
-            var products = await unitOfWork.productRepository.GetAll(Page, Limit, new string[] { "Category" });
+            var validatedPage = PaginationHelper.ValidatePage(Page);
+            var validatedLimit = PaginationHelper.ValidateLimit(Limit);
+            var products = await unitOfWork.productRepository.GetAll(validatedPage, validatedLimit, new string[] { "Category" });
             bool isEmpty = !products.Any();
-            
-            if(isEmpty) {
-                response.Result = new object[] { };
+			var result = new Dictionary<string, object>
+			{
+		    	{ "page", validatedPage },
+		    	{ "limit", validatedLimit }
+		    };
 
+            var mappedProducts = mapper.Map<IEnumerable<Product>, IEnumerable<ProductDto>>(products);
+
+			if (isEmpty) {
+				result.Add("products",Array.Empty<Product>());
+                result.Add("count", 0);
             }else{
-                var mappedProducts = mapper.Map<IEnumerable<Product> ,IEnumerable <ProductDTO>>(products);
-                response.Result = mappedProducts;
-            }
+                result.Add("products", mappedProducts);
+                result.Add("count", products.Count());
+			}
             
-            response.IsSucess = true;
-            response.StatusCode = HttpStatusCode.OK;
-            return response; 
+            var response = new ApiResponse(HttpStatusCode.OK, result);
+
+			return Ok(response); 
         }
 
         [HttpGet("{Id}")]
         public async Task<ActionResult> GetProductById(int Id)
         {
-            var product = await unitOfWork.productRepository.GetById(Id);
+            var product = await unitOfWork.productRepository.GetProductById(Id);
             bool isEmpty = (product == null);
             if (isEmpty)
             {
-                response.StatusCode = HttpStatusCode.BadRequest;
-                response.IsSucess = false;
-                response.ErrorMessages = "no products with this category";
-                return BadRequest(response);
-            }
+                string message = "no products with this category";
+                var NotFoundResult = new ApiResponse(HttpStatusCode.NotFound, message);
 
-            response.StatusCode = HttpStatusCode.OK;
-            response.IsSucess = true;
-            var mappedProducts = mapper.Map<Product, ProductDTO>(product);
-            response.Result = mappedProducts;
+                return NotFound(NotFoundResult);
+            }
+            
+            var mappedProduct = mapper.Map<Product, ProductDto>(product!);
+            var result = new Dictionary<string, object>() { { "product", mappedProduct } };
+            var response = new ApiResponse(HttpStatusCode.OK, result);
+
             return Ok(response);
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create(Product product)
+        public async Task<ActionResult<ApiResponse>> Create([FromBody] ProductCreateDto productDto)
         {
+            var product = mapper.Map<Product>(productDto);
+
             await unitOfWork.productRepository.Create(product);
-            // must be var product = unitOfWork.productRepository.Create(product);
-            if (product is null)
-            {
-                return BadRequest();
-            }
             await unitOfWork.saveAsync();
 
-            var mappedProduct = mapper.Map<Product, ProductDTO>(product);
-            return Ok(mappedProduct);
+            var mappedProduct = mapper.Map<Product, ProductDto>(product);
+            var response = new ApiResponse(HttpStatusCode.Created, mappedProduct);
+
+            return Ok(response);
         }
 
         [HttpPut("{Id}")]
-        public async Task<ActionResult> Update(UpdateProductDto product, int Id)
+        public async Task<ActionResult<ApiResponse>> Update([FromBody] ProductUpdateDto product, int Id)
         {
             bool IsBadRequest = false;
-            ProductDTO returnedProduct = new();
+            ProductDto returnedProduct = new();
             await unitOfWork.productRepository.Update(Id, (ProductAfterChange) =>
             {
-                if(ProductHelpers.IsInvalid(product))
+                if(ProductHelper.IsInvalidUpdateDto(product))
                 {
-                    response.IsSucess = false;
-                    response.ErrorMessages = "At least one field of Name, Description, Price, CategoryId, Image is required";
-                    response.StatusCode = HttpStatusCode.BadRequest;
+                    IsBadRequest = true;
+                }else{
+                    var UpdatedProduct = ProductHelper.UpdateProductDto(ref ProductAfterChange, product);
+                    returnedProduct = mapper.Map<Product, ProductDto>(UpdatedProduct);
                 }
-
-                var UpdatedProduct = ProductHelpers.UpdateProductDto(ref ProductAfterChange, product);
-
-                returnedProduct = mapper.Map<Product, ProductDTO>(UpdatedProduct);
             });
             if (IsBadRequest) { 
-                return BadRequest(response);
+                string message = "At least one field of Name, Description, Price, CategoryId, Image is required";
+                var errorResponse = new ApiResponse(HttpStatusCode.BadRequest, message);
+				
+				return BadRequest(errorResponse);
             }
-            // change it to var updatedProduct = unitOfWork.productRepository.Update(product);
             
             await unitOfWork.saveAsync();
-            
-            response.IsSucess = true;
-            response.Result = returnedProduct;
-            response.StatusCode = HttpStatusCode.Accepted;
+            var successResponse = new ApiResponse(HttpStatusCode.Accepted, returnedProduct);
 
-            return Accepted(response);
+            return Accepted(successResponse);
         }
 
-        [HttpDelete]
+        [HttpDelete("{Id}")]
         public async Task<ActionResult> Delete(int id)
         {
             bool isDeleted = await unitOfWork.productRepository.Delete(id);
             if (!isDeleted)
             {
-                return BadRequest();
+                var errorMessage = "Something went wrong please try again later!";
+                var badResponse = new ApiResponse(HttpStatusCode.BadRequest, errorMessage);
+
+                return BadRequest(badResponse);
             }
             await unitOfWork.saveAsync();
 
@@ -127,22 +131,20 @@ namespace c_sharp_eCommerce.Controllers
         }
 
         [HttpGet("categories/{CategoryId}")]
-        public async Task<ActionResult<ApiResponse>> GetProductsByCategoryId(int CategoryId)
+        public async Task<ActionResult<ApiResponse>> GetProductsByCategoryId([FromRoute] int CategoryId)
         {
             var products = await unitOfWork.productRepository.GetProductsByCategoryId(CategoryId);
             bool isEmpty = !products.Any();
             if (isEmpty)
             {
-                response.Result = new object[] {};
-            }
-            else
-            {
-                var mappedProducts = mapper.Map<IEnumerable<Product>, IEnumerable<ProductDTO>>(products);
-                response.Result = mappedProducts;
-            }
+                var emptyResult = new object[] {};
+                var emptyResponse = new ApiResponse(HttpStatusCode.OK,data: emptyResult);
+				return Ok(emptyResponse);
+			}
 
-            response.StatusCode = HttpStatusCode.OK;
-            response.IsSucess = true;
+            var mappedProducts = mapper.Map<IEnumerable<Product>, IEnumerable<ProductDto>>(products);
+            var response = new ApiResponse(HttpStatusCode.OK, mappedProducts);
+
             return Ok(response);
         }
     }

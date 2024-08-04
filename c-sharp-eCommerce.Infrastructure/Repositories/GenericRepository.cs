@@ -35,14 +35,8 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<IEnumerable<TModel>> GetAll(int Page,int Limit,string[]? IncludedProperty)
+        public async Task<IEnumerable<TModel>> GetAll(int Page,int Limit,string[]? IncludedProperty = null)
         {
-            //if(typeof(TModel) == typeof(Product))
-            //{
-            //    var products = await appDbContext.Products.Include(prod=>prod.Category).ToListAsync();
-            //    return products as IEnumerable<TModel>;
-            //}
-
             IQueryable<TModel> query = appDbContext.Set<TModel>();
             if(IncludedProperty is not null)
             {
@@ -52,23 +46,14 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
                 }
             }
 
-            if (Page <= 0 && Limit < 2)
-            {
-                Page = 1;
-                Limit = 9;
-            }
-
             query = query.OrderBy(x => x).Skip((Page - 1) * Limit).Take(Limit);
-            // OrderBy(x => x) will order by primary key
             return await query.ToListAsync();
-            //var instance = await appDbContext.Set<TModel>().ToListAsync<TModel>();
-            //return instance;
         }
 
         public async Task<TModel> GetById(int id)
         {
-            var model = await appDbContext.Set<TModel>().FindAsync(id);
-            return model;
+            var resource = await appDbContext.Set<TModel>().FindAsync(id) ;
+            return resource;
         }
 
         public async Task Update(object PK,Action<TModel> UpdateResource)

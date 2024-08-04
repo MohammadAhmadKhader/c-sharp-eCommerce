@@ -1,10 +1,11 @@
-﻿namespace c_shap_eCommerce.Core
+﻿using Microsoft.AspNetCore.Hosting;
+
+namespace c_shap_eCommerce.Core
 {
-    internal class Program
+    public class Program
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello, World!");
+		static void Main(string[] args)
+		{
         }
     }
 }

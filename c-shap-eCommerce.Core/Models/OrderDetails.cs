@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -16,9 +17,12 @@ namespace c_shap_eCommerce.Core.Models
 
         [ForeignKey(nameof(Product))]
         public int ProductId { get; set; }
-        [Column(TypeName = "decimal(18,4)")]
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
+
+		[Range(0.0, 1000000, ErrorMessage = "minimum quantity allowed is 0 and max 1,000,000")]
+		public double Price { get; set; }
+
+		[Range(0, 1000000, ErrorMessage = "minimum quantity allowed is 0 and max 1,000,000")]
+		public int Quantity { get; set; }
         public Order? Order { get; set; }
         public Product? Product { get; set; }
     }

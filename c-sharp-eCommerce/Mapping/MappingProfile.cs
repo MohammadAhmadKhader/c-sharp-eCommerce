@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using c_shap_eCommerce.Core.DTOs.Categories;
 using c_shap_eCommerce.Core.DTOs.Products;
+using c_shap_eCommerce.Core.DTOs.Users;
 using c_shap_eCommerce.Core.Models;
 
 namespace c_sharp_eCommerce.Mapping
@@ -9,10 +10,12 @@ namespace c_sharp_eCommerce.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<Product, ProductDTO>()
-                .ForMember(Source => Source.Category, options => options.MapFrom(source => source.Category != null ? source.Name : null));
-            // ReverseMap() method to change all the properties
-            CreateMap<Category, CategoryDTO>().ReverseMap();
+            CreateMap<Product, ProductDto>()
+                .ForMember(destination => destination.Category, options => options.MapFrom(source => source.Category != null ? source.Category.Name : null));
+            CreateMap<Product, ProductCreateDto>().ReverseMap();
+			// ReverseMap() method to change all the properties
+			CreateMap<Category, CategoryDto>().ReverseMap();
+            CreateMap<User, UserDto>().ReverseMap();
         }
     }
 }
