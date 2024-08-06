@@ -34,6 +34,13 @@ namespace c_shap_eCommerce.Core.Models
 			IsSucess = false;
 		}
 
+		public ApiResponse(HttpStatusCode statusCode,bool isSuccess,string message)
+		{
+			StatusCode = statusCode;
+			Message = message;
+			IsSucess = isSuccess;
+		}
+
 		public ApiResponse(HttpStatusCode statusCode, object data)
 		{
 			StatusCode = statusCode;

@@ -19,16 +19,19 @@ namespace c_sharp_eCommerce.Infrastructure.Data
         public DbSet<OrderDetails> OrderDetails { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            
-        }
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+
+		}
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<OrderDetails>().HasKey(model => new { model.Id, model.OrderId, model.ProductId });
-            // composite key of Id & OrderId & ProductId
-           
+            modelBuilder.Entity<OrderDetails>()
+                .Property(x => x.Id)
+                .ValueGeneratedOnAdd();
+            
             modelBuilder.Entity<User>()
                 .Ignore(x => x.TwoFactorEnabled);
-                
+
+            // The 'updatedAt' behavior was set in database using a trigger
 			base.OnModelCreating(modelBuilder);
         }
     }

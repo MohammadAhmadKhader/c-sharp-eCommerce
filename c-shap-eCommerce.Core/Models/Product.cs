@@ -31,6 +31,8 @@ namespace c_shap_eCommerce.Core.Models
         public int CategoryId { get; set; }
         public Category? Category { get; set; }
         public ICollection<OrderDetails> OrderDetails { get; set; } = new HashSet<OrderDetails>();
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    }
+	}
 }

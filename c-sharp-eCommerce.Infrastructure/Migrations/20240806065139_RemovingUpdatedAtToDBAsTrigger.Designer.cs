@@ -12,8 +12,8 @@ using c_sharp_eCommerce.Infrastructure.Data;
 namespace c_sharp_eCommerce.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240803205348_AddingUserFields_FirstNameAndLastName")]
-    partial class AddingUserFields_FirstNameAndLastName
+    [Migration("20240806065139_RemovingUpdatedAtToDBAsTrigger")]
+    partial class RemovingUpdatedAtToDBAsTrigger
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -78,7 +78,10 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
             modelBuilder.Entity("c_shap_eCommerce.Core.Models.OrderDetails", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
@@ -111,6 +114,9 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -193,10 +199,6 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");

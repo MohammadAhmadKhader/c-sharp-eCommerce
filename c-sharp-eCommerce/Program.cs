@@ -15,6 +15,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using c_shap_eCommerce.Core.IServices;
 using c_sharp_eCommerce.Services;
+using CloudinaryDotNet;
+using c_sharp_eCommerce.Infrastructure.Middlewares;
+using FluentValidation;
+using c_sharp_eCommerce.Services.Validations;
+
 
 namespace c_sharp_eCommerce
 {
@@ -49,6 +54,10 @@ namespace c_sharp_eCommerce
             builder.Services.AddScoped(typeof(IUsersRepository), typeof(UsersRepository));
 			builder.Services.AddScoped(typeof(ITokenService), typeof(TokenService));
 			builder.Services.AddScoped(typeof(IEmailService), typeof(EmailService));
+			builder.Services.AddScoped(typeof(IImageService), typeof(ImageService));
+            builder.Services.AddSingleton<Cloudinary>();
+            builder.Services.AddValidators();
+
 
 			builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
             {
@@ -77,13 +86,13 @@ namespace c_sharp_eCommerce
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters {
                     ValidateIssuer = false,
+                    ValidateAudience = false,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
                 };
             });
 
-
-            builder.Services.Configure<ApiBehaviorOptions>(options =>
+			builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.InvalidModelStateResponseFactory = (ActionContext) =>
                 {
@@ -102,9 +111,13 @@ namespace c_sharp_eCommerce
                 app.UseSwagger();
                 app.UseSwaggerUI();
 			}
+            app.UseMiddleware<GlobalExceptionsMiddleware>();
+			//app.UseMiddleware<PaginationMiddleware>(); // this middleware has been set to Obselete, pagination handling was moved to controllers
             
-            app.UseHttpsRedirection();
+			app.UseHttpsRedirection();
 
+            
+            app.UseAuthentication();
             app.UseAuthorization();
             
             app.MapControllers();

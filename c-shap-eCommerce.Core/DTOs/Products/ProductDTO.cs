@@ -17,6 +17,5 @@ namespace c_shap_eCommerce.Core.DTOs.Products
         public double Price { get; set; }
         public int Quantity { get; set; }
         public int CategoryId { get; set; }
-        public string? Category { get; set; }
     }
 }

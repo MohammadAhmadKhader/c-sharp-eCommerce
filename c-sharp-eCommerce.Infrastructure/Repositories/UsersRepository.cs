@@ -1,12 +1,15 @@
 ﻿using AutoMapper;
 using c_shap_eCommerce.Core.DTOs.Users;
+using c_shap_eCommerce.Core.Exceptions;
 using c_shap_eCommerce.Core.IRepositories;
 using c_shap_eCommerce.Core.IServices;
 using c_shap_eCommerce.Core.Models;
 using c_sharp_eCommerce.Infrastructure.Data;
 using c_sharp_eCommerce.Infrastructure.Helpers;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -41,14 +44,16 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 		public async Task<LoginResponseDto> Login(LoginRequestDto loginRequest)
 		{
 			var user = await userManager.FindByEmailAsync(loginRequest.Email);
-			var checkPassword = await signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, false);
-			if (!checkPassword.Succeeded)
+			if(user == null)
 			{
-				return new LoginResponseDto()
-				{
-					User = null,
-					Token = "0,"
-				};
+				var message = "User email or password is wrong";
+				throw new UnauthorizedException(message);
+			}
+			var checkPassword = await signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, false);
+			if (checkPassword == null || !checkPassword.Succeeded)
+			{
+				var message = "User email or password is wrong";
+				throw new UnauthorizedException(message);
 			}
 			var roles = await userManager.GetRolesAsync(user);
 			return new LoginResponseDto()
@@ -57,47 +62,41 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 				Token = await tokenService.CreateTokenAsync(user),
 				Role = string.Join(", ", roles),
 			};
+	
 		}
 
 		public async Task<UserDto> Register(RegisterationRequestDto registerationRequest)
 		{
 			using (var transaction = await dbContext.Database.BeginTransactionAsync())
 			{
-				try
+				var user = new User
 				{
-					var user = new User
-					{
-						Email = registerationRequest.Email,
-						UserName = registerationRequest.Email.Split("@")[0],
-						FirstName = registerationRequest.FirstName,
-						LastName = registerationRequest.LastName,
-					};
+					Email = registerationRequest.Email,
+					UserName = registerationRequest.Email.Split("@")[0],
+					FirstName = registerationRequest.FirstName,
+					LastName = registerationRequest.LastName,
+				};
 
-					var result = await userManager.CreateAsync(user, registerationRequest.Password);
-					if (!result.Succeeded)
-					{
-						var errors = UserHelper.CaptureManagerError(result.Errors);
-						await transaction.RollbackAsync();
-						throw new Exception($"User Registeration has failed, errors: {errors}");
-					}
-				
-					var userRoleResult = await userManager.AddToRoleAsync(user, "User");
-					if (!userRoleResult.Succeeded)
-					{
-						await transaction.RollbackAsync();
-						var errors = UserHelper.CaptureManagerError(userRoleResult.Errors);
-						throw new Exception($"Error during creating user role, errors: {errors}");
-					}
-
-					await transaction.CommitAsync();
-					var returnedUser = dbContext.Users.FirstOrDefault(user => user.Email == registerationRequest.Email);
-					var returnedUserDto = mapper.Map<User, UserDto>(returnedUser!);
-					return returnedUserDto;
-				}
-				catch
+				var result = await userManager.CreateAsync(user, registerationRequest.Password);
+				if (!result.Succeeded)
 				{
-					throw;
+					var errors = UserHelper.CaptureManagerError(result.Errors);
+					await transaction.RollbackAsync();
+					throw new Exception($"User Registeration has failed, errors: {errors}");
 				}
+				// by default user on Registeration is set to "User"
+				var userRoleResult = await userManager.AddToRoleAsync(user, "User");
+				if (!userRoleResult.Succeeded)
+				{
+					await transaction.RollbackAsync();
+					var errors = UserHelper.CaptureManagerError(userRoleResult.Errors);
+					throw new Exception($"Error during creating user role, errors: {errors}");
+				}
+
+				await transaction.CommitAsync();
+				var returnedUser = dbContext.Users.FirstOrDefault(user => user.Email == registerationRequest.Email);
+				var returnedUserDto = mapper.Map<User, UserDto>(returnedUser!);
+				return returnedUserDto;
 			};
 		}
 	}

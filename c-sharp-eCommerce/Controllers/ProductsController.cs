@@ -1,42 +1,57 @@
 ﻿using AutoMapper;
+using c_shap_eCommerce.Core.DTOs.ApiResponseHandlers;
 using c_shap_eCommerce.Core.DTOs.Products;
 using c_shap_eCommerce.Core.IRepositories;
+using c_shap_eCommerce.Core.IServices;
 using c_shap_eCommerce.Core.Models;
 using c_sharp_eCommerce.Infrastructure.Data;
 using c_sharp_eCommerce.Infrastructure.Helpers;
 using c_sharp_eCommerce.Infrastructure.Repositories;
+using c_sharp_eCommerce.Services;
+using c_sharp_eCommerce.Services.Validations;
+using CloudinaryDotNet.Actions;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace c_sharp_eCommerce.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/products")]
     [ApiController]
     public class ProductsController : ControllerBase
     {
         private readonly IUnitOfWork<Product> unitOfWork;
         private readonly IMapper mapper;
+        private readonly IImageService imageService;
+        private readonly IValidator<ProductCreateDto> productCreateValidator;
+        private readonly IValidator<ProductUpdateDto> productUpdateValidator;
 
-        public ProductsController(IUnitOfWork<Product> UnitOfWork, IMapper mapper)
+		public ProductsController(IUnitOfWork<Product> UnitOfWork, IMapper mapper, IImageService imageService, IValidator<ProductCreateDto> productCreateValidator, IValidator<ProductUpdateDto> productUpdateValidator)
         {
             this.unitOfWork = UnitOfWork;
             this.mapper = mapper;
-        }
+            this.imageService = imageService;
+            this.productCreateValidator = productCreateValidator;
+            this.productUpdateValidator = productUpdateValidator;
+
+		}
 
         [HttpGet]
-        public async Task<ActionResult<ApiResponse>> GetAllProducts([FromQuery] int Page = PaginationHelper.DefaultPage, [FromQuery] int Limit = PaginationHelper.DefaultLimit)
+        public async Task<ActionResult<ApiResponse>> GetAllProducts([FromQuery] int page = PaginationHelper.DefaultPage, [FromQuery] int limit = PaginationHelper.DefaultLimit)
         {
-            var validatedPage = PaginationHelper.ValidatePage(Page);
-            var validatedLimit = PaginationHelper.ValidateLimit(Limit);
-            var products = await unitOfWork.productRepository.GetAll(validatedPage, validatedLimit, new string[] { "Category" });
+			var (validatedPage, validatedLimit) = PaginationHelper.ValidatePageAndLimit(page, limit);
+			var products = await unitOfWork.productRepository.GetAll(validatedPage, validatedLimit, new string[] { "Category" });
             bool isEmpty = !products.Any();
 			var result = new Dictionary<string, object>
 			{
-		    	{ "page", validatedPage },
-		    	{ "limit", validatedLimit }
+		    	{ "page", page },
+		    	{ "limit", limit }
 		    };
-
+            
             var mappedProducts = mapper.Map<IEnumerable<Product>, IEnumerable<ProductDto>>(products);
 
 			if (isEmpty) {
@@ -72,10 +87,16 @@ namespace c_sharp_eCommerce.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<ApiResponse>> Create([FromBody] ProductCreateDto productDto)
+		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,SuperAdmin")]
+		[HttpPost]
+        public async Task<ActionResult<ApiResponse>> Create([FromForm] ProductCreateDto productCreateDto)
         {
-            var product = mapper.Map<Product>(productDto);
+            productCreateValidator.ValidateAndThrow(productCreateDto);
+            var updatedResult = await imageService.UploadImageAsync(productCreateDto.Image, imageService.ProductsFolderPath);
+            var url = updatedResult.Url.ToString();
+
+            var product = mapper.Map<Product>(productCreateDto);
+            product.Image = url;
 
             await unitOfWork.productRepository.Create(product);
             await unitOfWork.saveAsync();
@@ -86,35 +107,43 @@ namespace c_sharp_eCommerce.Controllers
             return Ok(response);
         }
 
-        [HttpPut("{Id}")]
-        public async Task<ActionResult<ApiResponse>> Update([FromBody] ProductUpdateDto product, int Id)
-        {
-            bool IsBadRequest = false;
+		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,SuperAdmin")]
+		[HttpPut("{Id}")]
+		public async Task<ActionResult<ApiResponse>> Update([FromForm] ProductUpdateDto product, int Id)
+        {;
+            productUpdateValidator.ValidateAndThrow(product);
             ProductDto returnedProduct = new();
-            await unitOfWork.productRepository.Update(Id, (ProductAfterChange) =>
+            string? newProdImage = null;
+            if(product.Image != null)
             {
-                if(ProductHelper.IsInvalidUpdateDto(product))
-                {
-                    IsBadRequest = true;
-                }else{
-                    var UpdatedProduct = ProductHelper.UpdateProductDto(ref ProductAfterChange, product);
-                    returnedProduct = mapper.Map<Product, ProductDto>(UpdatedProduct);
-                }
-            });
-            if (IsBadRequest) { 
-                string message = "At least one field of Name, Description, Price, CategoryId, Image is required";
-                var errorResponse = new ApiResponse(HttpStatusCode.BadRequest, message);
-				
-				return BadRequest(errorResponse);
+                var productBeforeChange = await unitOfWork.productRepository.GetById(Id);
+                var oldImageUrl = productBeforeChange.Image;
+                var oldImagePublicId = imageService.GetImagePublicId(oldImageUrl, imageService.ProductsFolderPath);
+                var uploadResult = await imageService.UpdateImageAsync(product.Image, imageService.ProductsFolderPath, oldImagePublicId);
+                newProdImage = uploadResult.Url.ToString();
             }
-            
+
+            try
+            {
+                await unitOfWork.productRepository.Update(Id, (ProductAfterChange) =>
+                {
+                   var UpdatedProduct = ProductHelper.UpdateProductDto(ref ProductAfterChange, product, newProdImage);
+                   returnedProduct = mapper.Map<Product, ProductDto>(UpdatedProduct);
+                });
+            }
+            catch(ArgumentException argEx)
+            {
+                return BadRequest(new ApiResponse(HttpStatusCode.BadRequest, argEx.Message));
+            }
+			
             await unitOfWork.saveAsync();
             var successResponse = new ApiResponse(HttpStatusCode.Accepted, returnedProduct);
 
             return Accepted(successResponse);
         }
 
-        [HttpDelete("{Id}")]
+		[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,SuperAdmin")]
+		[HttpDelete("{Id}")]
         public async Task<ActionResult> Delete(int id)
         {
             bool isDeleted = await unitOfWork.productRepository.Delete(id);
@@ -125,15 +154,28 @@ namespace c_sharp_eCommerce.Controllers
 
                 return BadRequest(badResponse);
             }
-            await unitOfWork.saveAsync();
+            var product = await unitOfWork.productRepository.GetById(id);
+            var productImagePublicId = imageService.GetImagePublicId(product.Image, imageService.ProductsFolderPath);
+            var deletionResult = await imageService.DeleteImageAsync(productImagePublicId);
+
+            if (deletionResult.Result == "error")
+            {
+				var errorMessage = "Something went wrong please try again later!";
+				var badResponse = new ApiResponse(HttpStatusCode.InternalServerError, errorMessage);
+				return StatusCode(StatusCodes.Status500InternalServerError,badResponse);
+			}
+            
+			await unitOfWork.saveAsync();
 
             return NoContent();
         }
 
-        [HttpGet("categories/{CategoryId}")]
-        public async Task<ActionResult<ApiResponse>> GetProductsByCategoryId([FromRoute] int CategoryId)
+		[HttpGet("categories/{CategoryId}")]
+        public async Task<ActionResult<ApiResponse>> GetProductsByCategoryId([FromRoute] int CategoryId,
+            [FromQuery] int page = PaginationHelper.DefaultPage, [FromQuery] int limit = PaginationHelper.DefaultLimit)
         {
-            var products = await unitOfWork.productRepository.GetProductsByCategoryId(CategoryId);
+            var (validatedPage, validatedLimit) = PaginationHelper.ValidatePageAndLimit(page, limit);
+			var products = await unitOfWork.productRepository.GetProductsByCategoryId(CategoryId, validatedPage, validatedLimit);
             bool isEmpty = !products.Any();
             if (isEmpty)
             {
@@ -142,10 +184,11 @@ namespace c_sharp_eCommerce.Controllers
 				return Ok(emptyResponse);
 			}
 
-            var mappedProducts = mapper.Map<IEnumerable<Product>, IEnumerable<ProductDto>>(products);
-            var response = new ApiResponse(HttpStatusCode.OK, mappedProducts);
+            var mappedProducts = mapper.Map<IEnumerable<Product>, IEnumerable<ProductResponseDto>>(products);
+            var count = mappedProducts.Count();
+            var response = new ApiResponse(HttpStatusCode.OK, new {page=validatedPage, limit=validatedLimit, count, products=mappedProducts});
 
             return Ok(response);
         }
-    }
+	}
 }

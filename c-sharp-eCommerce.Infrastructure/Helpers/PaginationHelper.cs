@@ -15,6 +15,14 @@ namespace c_sharp_eCommerce.Infrastructure.Helpers
 		public const int LimitAdminMax = 60;
 		public const int DefaultLimit = 9;
 		public const int DefaultPage = 1;
+		[Obsolete]
+		private static Dictionary<string,bool> paginatedRoutes = new()
+		{
+			{"/api/products",true},
+			{"/api/products/categories",true},
+			{"/api/categories",true},
+			
+		};
 		public static int ValidatePage(int? page)
 		{
 			if (page == null || page < 1)
@@ -23,12 +31,12 @@ namespace c_sharp_eCommerce.Infrastructure.Helpers
 			}
 			return (int)page;
 		}
-		public static int ValidateLimit(int? limit, User? user = null)
+		public static int ValidateLimit(int? limit, bool isAdmin = false)
 		{
 			int expectedMaxLimit = LimitUserMax;
 			int expectedMinLimit = LimitUserMin;
 			// must validate if user is not admin
-			if (user is not null)
+			if (isAdmin)
 			{
 				expectedMaxLimit = LimitAdminMax;
 				expectedMinLimit = LimitAdminMin;
@@ -44,5 +52,17 @@ namespace c_sharp_eCommerce.Infrastructure.Helpers
 
             return (int)limit;
 		}
+		[Obsolete]
+		public static bool IsPaginatedPath(string path)
+		{
+			return paginatedRoutes.ContainsKey(path) == true;
+		}
+		public static (int,int) ValidatePageAndLimit(int? page,int? limit, bool isAdmin = false)
+		{
+			var validatedpage = ValidatePage(page);
+			var validatedLimit = ValidateLimit(limit,isAdmin);
+			return (validatedpage, validatedLimit);
+		}
+
 	}
 }

@@ -20,12 +20,15 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
             this.appDbContext = AppDbContext;
         }
 
-        public async Task<IEnumerable<Product>> GetProductsByCategoryId(int categoryId) {
+        public async Task<IEnumerable<Product>> GetProductsByCategoryId(int categoryId, int page, int limit) {
 
+            var skip = (page - 1) * limit;
             // Eager Loading
             var products = await appDbContext.Products
                 .Where(prod => prod.CategoryId == categoryId)
                 .Include(prod => prod.Category)
+                .Skip(skip)
+                .Take(limit)
                 .ToListAsync();
 
             return products;
@@ -36,6 +39,14 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
                 .Include(prod => prod.Category)
                 .FirstOrDefaultAsync(x=>x.Id == Id);
             return product;
+        }
+
+        public async Task<List<Product>> GetProductsByIds(List<int> ListOfIds)
+        {
+            var products = await appDbContext.Products
+                .Where(prod => ListOfIds.Contains(prod.Id))
+                .ToListAsync();
+            return products;
         }
         
     }

@@ -67,11 +67,10 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
                 }
 
                 UpdateResource(resource);
-            }
-            catch (Exception ex) {
+            }catch (Exception ex) {
                 Console.WriteLine(ex.Message);
+                throw;
             }
-            
         }
     }
 }

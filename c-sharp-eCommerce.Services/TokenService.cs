@@ -32,7 +32,7 @@ namespace c_sharp_eCommerce.Services
 			var roles = await userManager.GetRolesAsync(user);
 			var claims = new List<Claim>
 			{
-				new Claim(ClaimTypes.Name, user.FirstName),
+				new Claim(ClaimTypes.Name, user.UserName),
 				new Claim(ClaimTypes.Email, user.Email),
 				new Claim("UserId", user.Id.ToString()),
 			};

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace c_shap_eCommerce.Core.Models
 
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; } = "pending";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public User? User { get; set; }

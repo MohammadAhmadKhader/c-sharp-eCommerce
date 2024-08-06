@@ -9,10 +9,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using c_shap_eCommerce.Core.IRepositories;
 using c_shap_eCommerce.Core.IServices;
+using c_shap_eCommerce.Core.Exceptions;
+using FluentValidation;
+using c_sharp_eCommerce.Validations.ValidatorsExtensions;
+using c_sharp_eCommerce.Validations.UserValidations;
 
 namespace c_sharp_eCommerce.Controllers
 {
-	[Route("api/[controller]")]
+	[Route("api/users")]
 	[ApiController]
 	public class UsersController : ControllerBase
 	{
@@ -20,16 +24,29 @@ namespace c_sharp_eCommerce.Controllers
 		private readonly UserManager<User> userManager;
 		private readonly IEmailService emailService;
 		private readonly IMapper mapper;
-		public UsersController(IUsersRepository usersRepository, IMapper mapper, UserManager<User> userManager, IEmailService emailService)
+		private readonly IValidator<RegisterationRequestDto> registerationRequestValidator;
+		private readonly IValidator<LoginRequestDto> loginRequestValidator;
+		private readonly IValidator<SendEmailDto> sendEmailDtoValidator;
+		private readonly IValidator<ResetPasswordDto> resetPasswordRequestValidator;
+
+		public UsersController(IUsersRepository usersRepository, IMapper mapper,
+			UserManager<User> userManager, IEmailService emailService, 
+			IValidator<RegisterationRequestDto> registerationRequestValidator, IValidator<LoginRequestDto> loginRequestValidator
+			,IValidator<SendEmailDto> sendEmailDtoValidator, IValidator<ResetPasswordDto> resetPasswordRequestValidator)
 		{
 			this.usersRepository = usersRepository;
 			this.mapper = mapper;
 			this.userManager = userManager;
 			this.emailService = emailService;
+			this.registerationRequestValidator = registerationRequestValidator;
+			this.loginRequestValidator = loginRequestValidator;
+			this.sendEmailDtoValidator = sendEmailDtoValidator;
+			this.resetPasswordRequestValidator = resetPasswordRequestValidator;
 		}
 		[HttpPost("register")]
 		public async Task<ActionResult> Register([FromBody] RegisterationRequestDto registerationRequest)
 		{
+			registerationRequestValidator.ValidateAndThrow(registerationRequest);
 			bool isUniqueEmail = usersRepository.IsUniqueUser(registerationRequest.Email);
 			if (!isUniqueEmail)
 			{
@@ -64,29 +81,32 @@ namespace c_sharp_eCommerce.Controllers
 		[HttpPost("login")]
 		public async Task<ActionResult> Login([FromBody] LoginRequestDto loginRequest)
 		{
-			var loginResponse = await usersRepository.Login(loginRequest);
-			if(loginResponse.User == null)
+			loginRequestValidator.ValidateAndThrow(loginRequest);
+			try
 			{
-				var message = "Email or password is wrong";
-				var errResponse = new ApiResponse(HttpStatusCode.Unauthorized, message);
-				return Unauthorized(errResponse);
-			}
-			var userDto = mapper.Map<UserDto>(loginResponse.User);
-			var data = new Dictionary<string, object>();
-			data.Add("user", userDto);
-			data.Add("token", loginResponse.Token);
+				var loginResponse = await usersRepository.Login(loginRequest);
+				var userDto = mapper.Map<UserDto>(loginResponse.User);
+				var data = new Dictionary<string, object>();
+				data.Add("user", userDto);
+				data.Add("token", loginResponse.Token);
 
-			var response = new ApiResponse(HttpStatusCode.OK, data);
-			return Ok(response);
+				var response = new ApiResponse(HttpStatusCode.OK, data);
+				return Ok(response);
+			}catch(UnauthorizedException ex)
+			{
+				return Unauthorized(new ApiResponse(HttpStatusCode.Unauthorized, ex.Message));
+			}
+				
 		}
 
 		[HttpPost("SendEmail")]
-		public async Task<ActionResult> SendEmailToUser(string email)
+		public async Task<ActionResult> SendEmailToUser([FromBody] SendEmailDto sendEmailDto)
 		{
-			var user = await userManager.FindByEmailAsync(email);
+			sendEmailDtoValidator.ValidateAndThrow(sendEmailDto);
+			var user = await userManager.FindByEmailAsync(sendEmailDto.Email);
 			if(user == null)
 			{
-				var errResponse = new ApiResponse(HttpStatusCode.BadRequest, $"User with email: {email} does not exist");
+				var errResponse = new ApiResponse(HttpStatusCode.BadRequest, $"User with email: {sendEmailDto.Email} does not exist");
 				return BadRequest(errResponse);
 			}
 
@@ -109,6 +129,7 @@ namespace c_sharp_eCommerce.Controllers
 		[HttpPost("ResetPassword")]
 		public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordRequest)
 		{
+			resetPasswordRequestValidator.ValidateAndThrow(resetPasswordRequest);
 			var user = await userManager.FindByEmailAsync(resetPasswordRequest.Email);
 			if(user == null)
 			{
@@ -118,7 +139,8 @@ namespace c_sharp_eCommerce.Controllers
 			var result = await userManager.ResetPasswordAsync(user,resetPasswordRequest.Token, resetPasswordRequest.NewPassword);
 			if (!result.Succeeded)
 			{
-				return StatusCode(StatusCodes.Status500InternalServerError,"Something went wring during reseting password");
+				var errResponse = new ApiResponse(HttpStatusCode.InternalServerError, false,"Something went wring during reseting password");
+				return StatusCode(StatusCodes.Status500InternalServerError, errResponse);
 			}
 
 			var successRes = new ApiResponse(HttpStatusCode.Accepted, "Password has been reset successfully!");
