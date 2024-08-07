@@ -13,8 +13,8 @@ namespace c_sharp_eCommerce.Validations.OrderValidations
             RuleForEach(x => x.Items)
                 .SetValidator(new OrderItemDtoValidator());
 
-            RuleFor(x => x.UserId)
-                .Must(userId => ValidationsService.ValidateGuid(userId));
-        }
+            RuleFor(x => x)
+                .Must(x => Guid.TryParse(x.UserId, out _)).WithMessage("User id is not a correct Guid string");
+		}
     }
 }

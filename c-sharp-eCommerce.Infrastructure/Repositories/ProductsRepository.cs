@@ -4,6 +4,7 @@ using c_shap_eCommerce.Core.IRepositories;
 using c_shap_eCommerce.Core.Models;
 using c_sharp_eCommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +16,11 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
     public class ProductsRepository : GenericRepository<Product>, IProductsRepository
     {
         private readonly AppDbContext appDbContext;
-        public ProductsRepository(AppDbContext AppDbContext) : base(AppDbContext)
+        private readonly IServiceScopeFactory serviceScopeFactory;
+		public ProductsRepository(AppDbContext AppDbContext, IServiceScopeFactory serviceScopeFactory) : base(AppDbContext, serviceScopeFactory)
         {
             this.appDbContext = AppDbContext;
+            this.serviceScopeFactory = serviceScopeFactory;
         }
 
         public async Task<IEnumerable<Product>> GetProductsByCategoryId(int categoryId, int page, int limit) {

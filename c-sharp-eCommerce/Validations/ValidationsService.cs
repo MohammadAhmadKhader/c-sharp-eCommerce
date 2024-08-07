@@ -38,10 +38,5 @@ namespace c_sharp_eCommerce.Services.Validations
 			services.AddTransient<IValidator<SendEmailDto>, SendEmailDtoValidator>();
 			services.AddTransient<IValidator<ResetPasswordDto>, ResetPasswordDtoValidator>();
 		}
-
-		public static bool ValidateGuid(Guid Id)
-		{
-			return string.IsNullOrWhiteSpace(Id.ToString());
-		}
 	}
 }

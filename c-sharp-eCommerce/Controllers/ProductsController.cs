@@ -44,25 +44,14 @@ namespace c_sharp_eCommerce.Controllers
         public async Task<ActionResult<ApiResponse>> GetAllProducts([FromQuery] int page = PaginationHelper.DefaultPage, [FromQuery] int limit = PaginationHelper.DefaultLimit)
         {
 			var (validatedPage, validatedLimit) = PaginationHelper.ValidatePageAndLimit(page, limit);
-			var products = await unitOfWork.productRepository.GetAll(validatedPage, validatedLimit, new string[] { "Category" });
-            bool isEmpty = !products.Any();
-			var result = new Dictionary<string, object>
-			{
-		    	{ "page", page },
-		    	{ "limit", limit }
-		    };
+			var (products, count) = await unitOfWork.productRepository.GetAll(validatedPage, validatedLimit, new string[] { "Category" });
             
             var mappedProducts = mapper.Map<IEnumerable<Product>, IEnumerable<ProductDto>>(products);
-
-			if (isEmpty) {
-				result.Add("products",Array.Empty<Product>());
-                result.Add("count", 0);
-            }else{
-                result.Add("products", mappedProducts);
-                result.Add("count", products.Count());
-			}
             
-            var response = new ApiResponse(HttpStatusCode.OK, result);
+            var response = new ApiResponse(
+                HttpStatusCode.OK,
+                new {page= validatedPage,limit = validatedLimit, count,products = mappedProducts}
+            );
 
 			return Ok(response); 
         }

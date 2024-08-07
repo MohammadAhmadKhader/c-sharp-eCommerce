@@ -19,6 +19,7 @@ using CloudinaryDotNet;
 using c_sharp_eCommerce.Infrastructure.Middlewares;
 using FluentValidation;
 using c_sharp_eCommerce.Services.Validations;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace c_sharp_eCommerce
@@ -29,10 +30,10 @@ namespace c_sharp_eCommerce
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Add services to the container.
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("LocalConfiguration"))
-            );
-            // Add services to the container.
+            ,ServiceLifetime.Transient);
 
             builder.Services.AddControllers(options => options.CacheProfiles.Add("defaultCache",
                 new CacheProfile
@@ -55,7 +56,7 @@ namespace c_sharp_eCommerce
 			builder.Services.AddScoped(typeof(ITokenService), typeof(TokenService));
 			builder.Services.AddScoped(typeof(IEmailService), typeof(EmailService));
 			builder.Services.AddScoped(typeof(IImageService), typeof(ImageService));
-            builder.Services.AddSingleton<Cloudinary>();
+			builder.Services.AddSingleton<Cloudinary>();
             builder.Services.AddValidators();
 
 
@@ -104,7 +105,6 @@ namespace c_sharp_eCommerce
             });
 
             var app = builder.Build();
-
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -115,7 +115,6 @@ namespace c_sharp_eCommerce
 			//app.UseMiddleware<PaginationMiddleware>(); // this middleware has been set to Obselete, pagination handling was moved to controllers
             
 			app.UseHttpsRedirection();
-
             
             app.UseAuthentication();
             app.UseAuthorization();

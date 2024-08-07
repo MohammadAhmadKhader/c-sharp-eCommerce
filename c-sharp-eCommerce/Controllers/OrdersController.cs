@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mysqlx.Crud;
 using MySqlX.XDevAPI.Common;
+using System.Collections.Generic;
 using System.Net;
 using Order = c_shap_eCommerce.Core.Models.Order;
 
@@ -36,24 +37,9 @@ namespace c_sharp_eCommerce.Controllers
 		{
 			var validatedPage = PaginationHelper.ValidatePage(Page);
 			var validatedLimit = PaginationHelper.ValidateLimit(Limit);
-			var orders = await unitOfWork.orderRepository.GetAll(validatedPage, validatedLimit);
+			var (orders, count) = await unitOfWork.orderRepository.GetAll(validatedPage, validatedLimit);
 
-			var data = new Dictionary<string, object>();
-			data.Add("page", validatedPage);
-			data.Add("limit", validatedLimit);
-			bool isEmpty = !orders.Any();
-
-			if (isEmpty)
-			{
-				data.Add("orders", Array.Empty<Order>());
-				data.Add("count", 0);
-			}
-			else
-			{
-				data.Add("orders", orders);
-				data.Add("count", orders.Count());
-			}
-
+			var data = new { page= validatedPage, limit= validatedLimit, count, orders = orders };
 			var response = new ApiResponse(HttpStatusCode.OK, data);
 			return Ok(response);
 		}
@@ -78,6 +64,7 @@ namespace c_sharp_eCommerce.Controllers
 		public async Task<IActionResult> Create([FromBody] OrderCreateDto payload)
 		{
 			orderCreateValidator.ValidateAndThrow(payload);
+			
 			using var transaction = await unitOfWork.startTransactionAsync();
 			try
 			{	
@@ -93,10 +80,11 @@ namespace c_sharp_eCommerce.Controllers
 						var errResponse = new ApiResponse(HttpStatusCode.BadRequest, message);
 						return BadRequest(errResponse);
 					}
-				}
+				}				
+
 				var order = new Order
 				{
-					UserId = payload.UserId,
+					UserId =  Guid.Parse(payload.UserId), // validated already, check validations
 					Status = "pending",
 				};
 				await unitOfWork.orderRepository.Create(order);

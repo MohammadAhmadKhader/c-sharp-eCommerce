@@ -37,25 +37,12 @@ namespace c_sharp_eCommerce.Controllers
             ,[FromQuery] int limit = PaginationHelper.DefaultLimit)
         {
             var (validatedPage,validatedLimit) = PaginationHelper.ValidatePageAndLimit(page, limit);
-			var categories = await unitOfWork.categoryRepository.GetAll(validatedPage, validatedLimit);
-            bool isEmpty = !categories.Any();
-			var result = new Dictionary<string, object>
-			{
-				{ "page", page },
-				{ "limit", limit }
-			};
+			var (categories, count) = await unitOfWork.categoryRepository.GetAll(validatedPage, validatedLimit);
+			
+            var mappedCategories = mapper.Map<IEnumerable<Category>, IEnumerable<CategoryDto>>(categories);
 
-			if (isEmpty){
-                result.Add("categories", new object[] {});
-				result.Add("count", 0);
-
-			}else{
-                var mappedCategories = mapper.Map<IEnumerable<Category>, IEnumerable<CategoryDto>>(categories);
-                result.Add("categories", mappedCategories);
-				result.Add("count", categories.Count());
-			}
-            
-            var response = new ApiResponse(HttpStatusCode.OK, result);
+            var data = new { page= validatedPage, limit= validatedLimit, count, categories = mappedCategories};
+            var response = new ApiResponse(HttpStatusCode.OK, data);
             return Ok(response);
         }
 

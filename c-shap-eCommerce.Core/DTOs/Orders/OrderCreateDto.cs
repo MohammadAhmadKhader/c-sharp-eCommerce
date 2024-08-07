@@ -13,6 +13,6 @@ namespace c_shap_eCommerce.Core.DTOs.Orders
 		public List<OrderItemDto> Items { get; set; }
 
 		[Required]
-		public Guid UserId { get; set; }
+		public string UserId { get; set; }
 	}
 }

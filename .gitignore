@@ -362,3 +362,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /.env
+/c-sharp-eCommerce/appsettings.json
+/c-sharp-eCommerce/appsettings.json

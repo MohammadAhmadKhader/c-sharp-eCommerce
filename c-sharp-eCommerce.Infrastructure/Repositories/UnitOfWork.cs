@@ -6,18 +6,21 @@ using System.Threading.Tasks;
 using c_shap_eCommerce.Core.IRepositories;
 using c_sharp_eCommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace c_sharp_eCommerce.Infrastructure.Repositories
 {
     public class UnitOfWork<TModel> : IUnitOfWork<TModel> where TModel : class
     {
         private readonly AppDbContext appDbCpntext;
-        public UnitOfWork(AppDbContext AppDbContext)
+        private readonly IServiceScopeFactory serviceScopeFactory;  
+        public UnitOfWork(AppDbContext AppDbContext, IServiceScopeFactory serviceScopeFactory)
         {
             this.appDbCpntext = AppDbContext;
-            productRepository = new ProductsRepository(AppDbContext);
-            categoryRepository = new CategoriesRepository(AppDbContext);
-            orderRepository = new OrdersRepository(AppDbContext);
+            this.serviceScopeFactory = serviceScopeFactory;
+            productRepository = new ProductsRepository(AppDbContext, serviceScopeFactory);
+            categoryRepository = new CategoriesRepository(AppDbContext, serviceScopeFactory);
+            orderRepository = new OrdersRepository(AppDbContext, serviceScopeFactory);
         }
         public IProductsRepository productRepository { get; set; }
         public ICategoriesRepository categoryRepository { get; set; }
