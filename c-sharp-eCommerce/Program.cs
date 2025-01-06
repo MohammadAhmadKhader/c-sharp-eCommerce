@@ -93,6 +93,8 @@ namespace c_sharp_eCommerce
                 };
             });
 
+            builder.Services.AddHttpContextAccessor();
+
 			builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.InvalidModelStateResponseFactory = (ActionContext) =>

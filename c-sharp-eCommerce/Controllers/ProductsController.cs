@@ -63,7 +63,7 @@ namespace c_sharp_eCommerce.Controllers
             bool isEmpty = (product == null);
             if (isEmpty)
             {
-                string message = "no products with this category";
+                string message = $"no products with {Id} id";
                 var NotFoundResult = new ApiResponse(HttpStatusCode.NotFound, message);
 
                 return NotFound(NotFoundResult);

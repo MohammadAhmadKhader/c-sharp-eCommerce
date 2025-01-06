@@ -10,5 +10,6 @@ namespace c_shap_eCommerce.Core.IServices
     public interface ITokenService
     {
         Task<string> CreateTokenAsync(User user);
+        TokenData GetTokenData();
     }
 }

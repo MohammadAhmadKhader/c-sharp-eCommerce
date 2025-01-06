@@ -30,6 +30,11 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 				errMessage = "NotFound";
 				return errMessage;
 			}
+            if(order.Status == "completed")
+            {
+                errMessage = "order is completed";
+                return errMessage;
+            }
             if(order.Status == "cancelled")
             {
 				errMessage = "AlreadyCancelled";

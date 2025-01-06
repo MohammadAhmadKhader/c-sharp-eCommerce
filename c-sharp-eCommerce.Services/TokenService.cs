@@ -1,5 +1,6 @@
 ﻿using c_shap_eCommerce.Core.IServices;
 using c_shap_eCommerce.Core.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -18,11 +19,13 @@ namespace c_sharp_eCommerce.Services
 		private readonly IConfiguration configuration;
 		private readonly string secretKey;
 		private readonly UserManager<User> userManager;
-		public TokenService(IConfiguration configuration, UserManager<User> userManager)
+        private readonly IHttpContextAccessor httpContextAccessor;
+        public TokenService(IConfiguration configuration, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
 		{
 			this.configuration = configuration;
 			this.secretKey = configuration.GetSection("ApiSettings")["JWTSecretKey"];
 			this.userManager = userManager;
+			this.httpContextAccessor = httpContextAccessor;
 		}
 
 		public async Task<string> CreateTokenAsync(User user)
@@ -50,6 +53,16 @@ namespace c_sharp_eCommerce.Services
 			var token = tokenHandler.CreateToken(tokenDescriptor);
 			var tokenAsString = tokenHandler.WriteToken(token);
 			return tokenAsString;
+		}
+
+		public TokenData GetTokenData()
+		{
+            var userEmail = httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
+			var userName = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            Console.WriteLine(userId);
+
+            return new TokenData { UserId = userId, Email = userEmail, UserName= userName };
 		}
 	}
 }

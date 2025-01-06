@@ -13,6 +13,7 @@ using c_shap_eCommerce.Core.Exceptions;
 using FluentValidation;
 using c_sharp_eCommerce.Validations.ValidatorsExtensions;
 using c_sharp_eCommerce.Validations.UserValidations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace c_sharp_eCommerce.Controllers
 {
