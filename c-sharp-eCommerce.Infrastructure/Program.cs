@@ -1,4 +1,4 @@
-﻿namespace c_sharp_eCommerce.Infrastructure
+namespace c_sharp_eCommerce.Infrastructure
 {
     internal class Program
     {

@@ -1,9 +1,4 @@
-﻿using c_shap_eCommerce.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using c_shap_eCommerce.Core.Models;
 
 namespace c_shap_eCommerce.Core.IRepositories
 {
@@ -13,5 +8,5 @@ namespace c_shap_eCommerce.Core.IRepositories
         Task<Product> GetProductById(int Id);
         Task<List<Product>> GetProductsByIds(List<int> ListOfIds);
 
-	}
+    }
 }

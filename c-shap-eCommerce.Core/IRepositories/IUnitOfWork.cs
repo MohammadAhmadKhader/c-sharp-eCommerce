@@ -1,9 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace c_shap_eCommerce.Core.IRepositories
 {
@@ -16,5 +11,5 @@ namespace c_shap_eCommerce.Core.IRepositories
         public Task<int> saveAsync();
         Task<IDbContextTransaction> startTransactionAsync();
 
-	}
+    }
 }

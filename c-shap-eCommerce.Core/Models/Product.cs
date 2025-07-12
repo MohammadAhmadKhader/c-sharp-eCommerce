@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace c_shap_eCommerce.Core.Models
 {
@@ -16,16 +11,16 @@ namespace c_shap_eCommerce.Core.Models
         [MaxLength(64)]
         public string Name { get; set; }
 
-		[MinLength(3)]
-		[MaxLength(1024)]
-		public string Description { get; set; }
+        [MinLength(3)]
+        [MaxLength(1024)]
+        public string Description { get; set; }
         public string Image { get; set; }
 
-		[Range(0.0, 1000000, ErrorMessage = "minimum quantity allowed is 0 and max 1,000,000")]
-		public double Price { get; set; }
+        [Range(0.0, 1000000, ErrorMessage = "minimum quantity allowed is 0 and max 1,000,000")]
+        public double Price { get; set; }
 
-		[Range(0, 1000000, ErrorMessage = "minimum quantity allowed is 0 and max 1,000,000")]
-		public int Quantity { get; set; }
+        [Range(0, 1000000, ErrorMessage = "minimum quantity allowed is 0 and max 1,000,000")]
+        public int Quantity { get; set; }
 
         [ForeignKey(nameof(Category))]
         public int CategoryId { get; set; }
@@ -34,5 +29,5 @@ namespace c_shap_eCommerce.Core.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-	}
+    }
 }

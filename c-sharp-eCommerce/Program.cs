@@ -3,8 +3,6 @@ using c_sharp_eCommerce.Infrastructure.Data;
 using c_sharp_eCommerce.Infrastructure.Repositories;
 using c_sharp_eCommerce.Mapping;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using c_sharp_eCommerce.Infrastructure.Helpers;
 using c_shap_eCommerce.Core.DTOs.ApiResponseHandlers;
@@ -17,9 +15,7 @@ using c_shap_eCommerce.Core.IServices;
 using c_sharp_eCommerce.Services;
 using CloudinaryDotNet;
 using c_sharp_eCommerce.Infrastructure.Middlewares;
-using FluentValidation;
 using c_sharp_eCommerce.Services.Validations;
-using Microsoft.Extensions.DependencyInjection;
 
 
 namespace c_sharp_eCommerce
@@ -33,7 +29,7 @@ namespace c_sharp_eCommerce
             // Add services to the container.
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("LocalConfiguration"))
-            ,ServiceLifetime.Transient);
+            , ServiceLifetime.Transient);
 
             builder.Services.AddControllers(options => options.CacheProfiles.Add("defaultCache",
                 new CacheProfile
@@ -42,7 +38,7 @@ namespace c_sharp_eCommerce
                     Location = ResponseCacheLocation.Any,
                 })
             );
-            
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -53,21 +49,21 @@ namespace c_sharp_eCommerce
             builder.Services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddScoped(typeof(IUsersRepository), typeof(UsersRepository));
-			builder.Services.AddScoped(typeof(ITokenService), typeof(TokenService));
-			builder.Services.AddScoped(typeof(IEmailService), typeof(EmailService));
-			builder.Services.AddScoped(typeof(IImageService), typeof(ImageService));
-			builder.Services.AddSingleton<Cloudinary>();
+            builder.Services.AddScoped(typeof(ITokenService), typeof(TokenService));
+            builder.Services.AddScoped(typeof(IEmailService), typeof(EmailService));
+            builder.Services.AddScoped(typeof(IImageService), typeof(ImageService));
+            builder.Services.AddSingleton<Cloudinary>();
             builder.Services.AddValidators();
 
 
-			builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+            builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
             {
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireDigit = false;
                 options.Password.RequiredUniqueChars = 0;
                 options.Password.RequireNonAlphanumeric = false;
-			}).AddEntityFrameworkStores<AppDbContext>()
+            }).AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
             builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
@@ -85,7 +81,8 @@ namespace c_sharp_eCommerce
             {
                 options.RequireHttpsMetadata = false;
                 options.SaveToken = true;
-                options.TokenValidationParameters = new TokenValidationParameters {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateIssuerSigningKey = true,
@@ -95,12 +92,12 @@ namespace c_sharp_eCommerce
 
             builder.Services.AddHttpContextAccessor();
 
-			builder.Services.Configure<ApiBehaviorOptions>(options =>
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.InvalidModelStateResponseFactory = (ActionContext) =>
                 {
                     var errorsMessages = ValidationHelper.GetValidationErrors(ActionContext);
-                    var response = new ApiValidationResponse(System.Net.HttpStatusCode.BadRequest,errorsMessages);
+                    var response = new ApiValidationResponse(System.Net.HttpStatusCode.BadRequest, errorsMessages);
 
                     return new BadRequestObjectResult(response);
                 };
@@ -112,15 +109,15 @@ namespace c_sharp_eCommerce
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-			}
+            }
             app.UseMiddleware<GlobalExceptionsMiddleware>();
-			//app.UseMiddleware<PaginationMiddleware>(); // this middleware has been set to Obselete, pagination handling was moved to controllers
-            
-			app.UseHttpsRedirection();
-            
+            //app.UseMiddleware<PaginationMiddleware>(); // this middleware has been set to Obselete, pagination handling was moved to controllers
+
+            app.UseHttpsRedirection();
+
             app.UseAuthentication();
             app.UseAuthorization();
-            
+
             app.MapControllers();
 
             app.Run();

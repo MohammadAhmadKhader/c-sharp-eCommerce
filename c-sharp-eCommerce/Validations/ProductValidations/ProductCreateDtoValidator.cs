@@ -1,13 +1,7 @@
-﻿using c_shap_eCommerce.Core.DTOs.Products;
-using c_shap_eCommerce.Core.Exceptions;
+using c_shap_eCommerce.Core.DTOs.Products;
 using c_sharp_eCommerce.Validations.ValidatorsExtensions;
 using FluentValidation;
 using FluentValidation.Results;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static c_sharp_eCommerce.Validations.ProductValidations.ProductValidators;
 
 namespace c_sharp_eCommerce.Validations.ProductValidations

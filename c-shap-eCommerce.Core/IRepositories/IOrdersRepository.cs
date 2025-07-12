@@ -1,14 +1,9 @@
-﻿using c_shap_eCommerce.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using c_shap_eCommerce.Core.Models;
 
 namespace c_shap_eCommerce.Core.IRepositories
 {
-	public interface IOrdersRepository : IGenericRepository<Order>
-	{
-		Task<string?> CancelOrderById(int Id);
-	}
+    public interface IOrdersRepository : IGenericRepository<Order>
+    {
+        Task<string?> CancelOrderById(int Id);
+    }
 }

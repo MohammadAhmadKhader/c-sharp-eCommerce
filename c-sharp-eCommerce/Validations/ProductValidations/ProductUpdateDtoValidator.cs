@@ -1,13 +1,7 @@
-﻿using c_shap_eCommerce.Core.DTOs.Products;
-using c_shap_eCommerce.Core.Exceptions;
+using c_shap_eCommerce.Core.DTOs.Products;
 using c_sharp_eCommerce.Validations.ValidatorsExtensions;
 using FluentValidation;
 using FluentValidation.Results;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static c_sharp_eCommerce.Validations.ProductValidations.ProductValidators;
 
 namespace c_sharp_eCommerce.Validations.ProductValidations
@@ -17,15 +11,15 @@ namespace c_sharp_eCommerce.Validations.ProductValidations
         public ProductUpdateDtoValidator()
         {
             RuleFor(x => x.CategoryId)
-				.SetValidator(new ProductCategoryIdValidator());
+                .SetValidator(new ProductCategoryIdValidator());
 
-			RuleFor(x => x.Name)
-				.SetValidator(new ProductNameValidator());
+            RuleFor(x => x.Name)
+                .SetValidator(new ProductNameValidator());
 
-			RuleFor(x => x.Description)
-				.SetValidator(new ProductDescriptionValidator());
+            RuleFor(x => x.Description)
+                .SetValidator(new ProductDescriptionValidator());
 
-			RuleFor(x => x.Image)
+            RuleFor(x => x.Image)
                 .CustomImageValidator();
 
             RuleFor(x => x.Price)

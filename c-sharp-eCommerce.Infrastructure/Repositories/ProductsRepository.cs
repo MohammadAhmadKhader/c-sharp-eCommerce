@@ -1,15 +1,8 @@
-﻿using AutoMapper;
-using c_shap_eCommerce.Core.DTOs;
 using c_shap_eCommerce.Core.IRepositories;
 using c_shap_eCommerce.Core.Models;
 using c_sharp_eCommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace c_sharp_eCommerce.Infrastructure.Repositories
 {
@@ -17,13 +10,14 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
     {
         private readonly AppDbContext appDbContext;
         private readonly IServiceScopeFactory serviceScopeFactory;
-		public ProductsRepository(AppDbContext AppDbContext, IServiceScopeFactory serviceScopeFactory) : base(AppDbContext, serviceScopeFactory)
+        public ProductsRepository(AppDbContext AppDbContext, IServiceScopeFactory serviceScopeFactory) : base(AppDbContext, serviceScopeFactory)
         {
             this.appDbContext = AppDbContext;
             this.serviceScopeFactory = serviceScopeFactory;
         }
 
-        public async Task<IEnumerable<Product>> GetProductsByCategoryId(int categoryId, int page, int limit) {
+        public async Task<IEnumerable<Product>> GetProductsByCategoryId(int categoryId, int page, int limit)
+        {
 
             var skip = (page - 1) * limit;
             // Eager Loading
@@ -40,7 +34,7 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
         {
             var product = await appDbContext.Products
                 .Include(prod => prod.Category)
-                .FirstOrDefaultAsync(x=>x.Id == Id);
+                .FirstOrDefaultAsync(x => x.Id == Id);
             return product;
         }
 
@@ -51,6 +45,6 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
                 .ToListAsync();
             return products;
         }
-        
+
     }
 }
