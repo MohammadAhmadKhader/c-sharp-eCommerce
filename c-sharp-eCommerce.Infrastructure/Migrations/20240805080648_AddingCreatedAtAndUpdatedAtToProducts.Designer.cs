@@ -24,7 +24,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Category", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,7 +47,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Order", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -75,7 +75,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.OrderDetails", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.OrderDetails", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -104,7 +104,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                     b.ToTable("OrderDetails");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Product", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -150,7 +150,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.User", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -356,9 +356,9 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Order", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Order", b =>
                 {
-                    b.HasOne("c_shap_eCommerce.Core.Models.User", "User")
+                    b.HasOne("c_sharp_eCommerce.Core.Models.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -367,15 +367,15 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.OrderDetails", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.OrderDetails", b =>
                 {
-                    b.HasOne("c_shap_eCommerce.Core.Models.Order", "Order")
+                    b.HasOne("c_sharp_eCommerce.Core.Models.Order", "Order")
                         .WithMany("OrderDetails")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("c_shap_eCommerce.Core.Models.Product", "Product")
+                    b.HasOne("c_sharp_eCommerce.Core.Models.Product", "Product")
                         .WithMany("OrderDetails")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -386,9 +386,9 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Product", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Product", b =>
                 {
-                    b.HasOne("c_shap_eCommerce.Core.Models.Category", "Category")
+                    b.HasOne("c_sharp_eCommerce.Core.Models.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -408,7 +408,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("c_shap_eCommerce.Core.Models.User", null)
+                    b.HasOne("c_sharp_eCommerce.Core.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -417,7 +417,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("c_shap_eCommerce.Core.Models.User", null)
+                    b.HasOne("c_sharp_eCommerce.Core.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -432,7 +432,7 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("c_shap_eCommerce.Core.Models.User", null)
+                    b.HasOne("c_sharp_eCommerce.Core.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -441,29 +441,29 @@ namespace c_sharp_eCommerce.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("c_shap_eCommerce.Core.Models.User", null)
+                    b.HasOne("c_sharp_eCommerce.Core.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Category", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Category", b =>
                 {
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Order", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Order", b =>
                 {
                     b.Navigation("OrderDetails");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.Product", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.Product", b =>
                 {
                     b.Navigation("OrderDetails");
                 });
 
-            modelBuilder.Entity("c_shap_eCommerce.Core.Models.User", b =>
+            modelBuilder.Entity("c_sharp_eCommerce.Core.Models.User", b =>
                 {
                     b.Navigation("Orders");
                 });

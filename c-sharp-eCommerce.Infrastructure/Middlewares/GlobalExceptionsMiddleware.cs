@@ -1,40 +1,34 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using FluentValidation.Results;
 using FluentValidation;
 
 namespace c_sharp_eCommerce.Infrastructure.Middlewares
 {
-	public class GlobalExceptionsMiddleware
-	{
-		private readonly RequestDelegate next;
+    public class GlobalExceptionsMiddleware
+    {
+        private readonly RequestDelegate _next;
 
         public GlobalExceptionsMiddleware(RequestDelegate next)
         {
-            this.next = next;
+            _next = next;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
-                await next(context);
+                await _next(context);
             }
-			catch (ValidationException ex)
+            catch (ValidationException ex)
             {
-				await HandleFluentValidationException(context, ex);
-			}
+                await HandleFluentValidationException(context, ex);
+            }
             catch (Exception ex)
             {
-				Console.WriteLine(ex.StackTrace);
+                Console.WriteLine(ex.StackTrace);
                 Console.WriteLine(ex.Message);
                 await HandleGeneralExceptionAsync(context, ex);
-			}
+            }
         }
 
         private static Task HandleGeneralExceptionAsync(HttpContext context, Exception exception)
@@ -47,23 +41,23 @@ namespace c_sharp_eCommerce.Infrastructure.Middlewares
             {
                 statusCode = 500,
                 error = genericMsg,
-			});
+            });
 
             return context.Response.WriteAsync(result);
         }
 
-		private static Task HandleFluentValidationException(HttpContext context, ValidationException exception)
-		{
-			context.Response.ContentType = "application/json";
-			context.Response.StatusCode = 400;
+        private static Task HandleFluentValidationException(HttpContext context, ValidationException exception)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = 400;
             var errors = exception.Errors.Select(x => x.ErrorMessage).ToList();
-			var result = JsonSerializer.Serialize(new
-			{
-				statusCode = 400,
-				errors,
-			});
+            var result = JsonSerializer.Serialize(new
+            {
+                statusCode = 400,
+                errors,
+            });
 
-			return context.Response.WriteAsync(result);
-		}
-	}
+            return context.Response.WriteAsync(result);
+        }
+    }
 }

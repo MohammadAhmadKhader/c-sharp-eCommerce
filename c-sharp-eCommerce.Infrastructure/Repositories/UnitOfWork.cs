@@ -1,45 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using c_shap_eCommerce.Core.IRepositories;
+﻿using c_sharp_eCommerce.Core.IRepositories;
 using c_sharp_eCommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace c_sharp_eCommerce.Infrastructure.Repositories
 {
     public class UnitOfWork<TModel> : IUnitOfWork<TModel> where TModel : class
     {
-        private readonly AppDbContext appDbCpntext;
-        private readonly IServiceScopeFactory serviceScopeFactory;  
-        public UnitOfWork(AppDbContext AppDbContext, IServiceScopeFactory serviceScopeFactory)
+        private readonly AppDbContext _context;
+        public UnitOfWork(AppDbContext context)
         {
-            this.appDbCpntext = AppDbContext;
-            this.serviceScopeFactory = serviceScopeFactory;
-            productRepository = new ProductsRepository(AppDbContext, serviceScopeFactory);
-            categoryRepository = new CategoriesRepository(AppDbContext, serviceScopeFactory);
-            orderRepository = new OrdersRepository(AppDbContext, serviceScopeFactory);
+            _context = context;
+            ProductRepository = new ProductsRepository(context);
+            CategoryRepository = new CategoriesRepository(context);
+            OrderRepository = new OrdersRepository(context);
         }
-        public IProductsRepository productRepository { get; set; }
-        public ICategoriesRepository categoryRepository { get; set; }
-        public IOrdersRepository orderRepository { get; set; }
-        public int save() => appDbCpntext.SaveChanges();
-        public async Task<int> saveAsync(){
-            try
-            {
-                return await appDbCpntext.SaveChangesAsync();
-            }
-            catch (Exception ex) {
-                Console.WriteLine(ex.Message);
-                return 0;
-            }
+        public IProductsRepository ProductRepository { get; set; }
+        public ICategoriesRepository CategoryRepository { get; set; }
+        public IOrdersRepository OrderRepository { get; set; }
+        public int Save() => _context.SaveChanges();
+        public async Task<int> SaveAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
 
-        public async Task<IDbContextTransaction> startTransactionAsync()
+        public async Task<IDbContextTransaction> StartTransactionAsync()
         {
-            var transaction = await appDbCpntext.Database.BeginTransactionAsync();
+            var transaction = await _context.Database.BeginTransactionAsync();
             return transaction;
         }
     }

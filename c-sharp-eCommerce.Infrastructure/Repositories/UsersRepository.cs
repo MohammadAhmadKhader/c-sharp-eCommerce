@@ -1,73 +1,66 @@
 ﻿using AutoMapper;
-using c_shap_eCommerce.Core.DTOs.Users;
-using c_shap_eCommerce.Core.Exceptions;
-using c_shap_eCommerce.Core.IRepositories;
-using c_shap_eCommerce.Core.IServices;
-using c_shap_eCommerce.Core.Models;
+using c_sharp_eCommerce.Core.DTOs.Users;
+using c_sharp_eCommerce.Core.Exceptions;
+using c_sharp_eCommerce.Core.IRepositories;
+using c_sharp_eCommerce.Core.IServices;
+using c_sharp_eCommerce.Core.Models;
 using c_sharp_eCommerce.Infrastructure.Data;
 using c_sharp_eCommerce.Infrastructure.Helpers;
-using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace c_sharp_eCommerce.Infrastructure.Repositories
 {
 	public class UsersRepository : IUsersRepository
 	{
-		private readonly AppDbContext dbContext;
-		private readonly UserManager<User> userManager;
-		private readonly SignInManager<User> signInManager;
-		private readonly ITokenService tokenService;
-		private readonly IMapper mapper;
-		public UsersRepository(AppDbContext dbContext, UserManager<User> userManager, IMapper mapper, SignInManager<User> signInManager, ITokenService tokenService)
+		private readonly AppDbContext _context;
+		private readonly UserManager<User> _userManager;
+		private readonly SignInManager<User> _signInManager;
+		private readonly ITokenService _tokenService;
+		private readonly IMapper _mapper;
+		public UsersRepository(AppDbContext context, UserManager<User> userManager, IMapper mapper, SignInManager<User> signInManager, ITokenService tokenService)
 		{
-			this.dbContext = dbContext;
-			this.userManager = userManager;
-			this.signInManager = signInManager;
-			this.mapper = mapper;
-			this.tokenService = tokenService;
+			_context = context;
+			_userManager = userManager;
+			_signInManager = signInManager;
+			_mapper = mapper;
+			_tokenService = tokenService;
 		}
 		public bool IsUniqueUser(string Email)
 		{
-			var result = dbContext.Users.FirstOrDefault(x => x.NormalizedEmail == Email.ToUpper());
+			var result = _context.Users.FirstOrDefault(x => x.NormalizedEmail == Email.ToUpper());
 			return result == null;
 		}
 
 		public async Task<LoginResponseDto> Login(LoginRequestDto loginRequest)
 		{
-			var user = await userManager.FindByEmailAsync(loginRequest.Email);
-			if(user == null)
+			var user = await _userManager.FindByEmailAsync(loginRequest.Email);
+			if (user == null)
 			{
 				var message = "User email or password is wrong";
 				throw new UnauthorizedException(message);
 			}
-			var checkPassword = await signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, false);
+
+			var checkPassword = await _signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, false);
 			if (checkPassword == null || !checkPassword.Succeeded)
 			{
 				var message = "User email or password is wrong";
 				throw new UnauthorizedException(message);
 			}
-			var roles = await userManager.GetRolesAsync(user);
+
+			var roles = await _userManager.GetRolesAsync(user);
+
 			return new LoginResponseDto()
 			{
-				User = mapper.Map<UserDto>(user),
-				Token = await tokenService.CreateTokenAsync(user),
+				User = _mapper.Map<UserDto>(user),
+				Token = await _tokenService.CreateTokenAsync(user),
 				Role = string.Join(", ", roles),
 			};
-	
+
 		}
 
 		public async Task<UserDto> Register(RegisterationRequestDto registerationRequest)
 		{
-			using (var transaction = await dbContext.Database.BeginTransactionAsync())
+			using (var transaction = await _context.Database.BeginTransactionAsync())
 			{
 				var user = new User
 				{
@@ -77,7 +70,7 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 					LastName = registerationRequest.LastName,
 				};
 
-				var result = await userManager.CreateAsync(user, registerationRequest.Password);
+				var result = await _userManager.CreateAsync(user, registerationRequest.Password);
 				if (!result.Succeeded)
 				{
 					var errors = UserHelper.CaptureManagerError(result.Errors);
@@ -85,7 +78,7 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 					throw new Exception($"User Registeration has failed, errors: {errors}");
 				}
 				// by default user on Registeration is set to "User"
-				var userRoleResult = await userManager.AddToRoleAsync(user, "User");
+				var userRoleResult = await _userManager.AddToRoleAsync(user, "User");
 				if (!userRoleResult.Succeeded)
 				{
 					await transaction.RollbackAsync();
@@ -94,10 +87,11 @@ namespace c_sharp_eCommerce.Infrastructure.Repositories
 				}
 
 				await transaction.CommitAsync();
-				var returnedUser = dbContext.Users.FirstOrDefault(user => user.Email == registerationRequest.Email);
-				var returnedUserDto = mapper.Map<User, UserDto>(returnedUser!);
+				var returnedUser = _context.Users.FirstOrDefault(user => user.Email == registerationRequest.Email);
+				var returnedUserDto = _mapper.Map<User, UserDto>(returnedUser!);
 				return returnedUserDto;
-			};
+			}
+			;
 		}
 	}
 }

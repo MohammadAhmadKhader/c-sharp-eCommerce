@@ -1,11 +1,4 @@
-﻿using c_shap_eCommerce.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace c_sharp_eCommerce.Infrastructure.Helpers
+﻿namespace c_sharp_eCommerce.Infrastructure.Helpers
 {
 	public static class PaginationHelper
 	{
@@ -16,12 +9,12 @@ namespace c_sharp_eCommerce.Infrastructure.Helpers
 		public const int DefaultLimit = 9;
 		public const int DefaultPage = 1;
 		[Obsolete]
-		private static Dictionary<string,bool> paginatedRoutes = new()
+		private static readonly Dictionary<string, bool> paginatedRoutes = new()
 		{
 			{"/api/products",true},
 			{"/api/products/categories",true},
 			{"/api/categories",true},
-			
+
 		};
 		public static int ValidatePage(int? page)
 		{
@@ -45,22 +38,22 @@ namespace c_sharp_eCommerce.Infrastructure.Helpers
 			{
 				return DefaultLimit;
 			}
-			if(limit > expectedMaxLimit)
+			if (limit > expectedMaxLimit)
 			{
 				return expectedMaxLimit;
 			}
 
-            return (int)limit;
+			return (int)limit;
 		}
 		[Obsolete]
 		public static bool IsPaginatedPath(string path)
 		{
 			return paginatedRoutes.ContainsKey(path) == true;
 		}
-		public static (int,int) ValidatePageAndLimit(int? page,int? limit, bool isAdmin = false)
+		public static (int, int) ValidatePageAndLimit(int? page, int? limit, bool isAdmin = false)
 		{
 			var validatedpage = ValidatePage(page);
-			var validatedLimit = ValidateLimit(limit,isAdmin);
+			var validatedLimit = ValidateLimit(limit, isAdmin);
 			return (validatedpage, validatedLimit);
 		}
 

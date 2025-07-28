@@ -1,12 +1,7 @@
-﻿using c_shap_eCommerce.Core.IServices;
+﻿using c_sharp_eCommerce.Core.IServices;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 namespace c_sharp_eCommerce.Services
@@ -14,18 +9,18 @@ namespace c_sharp_eCommerce.Services
     public class ImageService : IImageService
     {
         public string ProductsFolderPath { get; } = "c-sharp-ecommerce/products";
-        private string cloudName = "doxhxgz2g";
-        private IConfiguration configuration;
-        private readonly Cloudinary cloudinary;
+        private readonly string _cloudName = "doxhxgz2g";
+        private readonly IConfiguration _configuration;
+        private readonly Cloudinary _cloudinary;
         public ImageService(IConfiguration configuration)
         {
-            this.configuration = configuration;
+            _configuration = configuration;
             var apiKey = configuration.GetSection("CloudinarySettings")["ApiKey"];
             var apiSecret = configuration.GetSection("CloudinarySettings")["ApiSecret"];
-            
-            var account = new Account(cloudName, apiKey, apiSecret);
-            cloudinary = new Cloudinary(account);
-            cloudinary.Api.Secure = true;
+
+            var account = new Account(_cloudName, apiKey, apiSecret);
+            _cloudinary = new Cloudinary(account);
+            _cloudinary.Api.Secure = true;
         }
         public async Task<ImageUploadResult> UploadImageAsync(IFormFile file, string folderPath)
         {
@@ -37,7 +32,7 @@ namespace c_sharp_eCommerce.Services
                     Folder = folderPath,
                 };
 
-                var uploadResult = await cloudinary.UploadAsync(uploadParams);
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams);
                 return uploadResult;
 
             }
@@ -50,29 +45,29 @@ namespace c_sharp_eCommerce.Services
         }
         public async Task<ImageUploadResult> UpdateImageAsync(IFormFile file, string publicId, string folderPath)
         {
-			var uploadResult = new ImageUploadResult();
-			try
+            var uploadResult = new ImageUploadResult();
+            try
             {
-                using(var stream = file.OpenReadStream())
-                { 
+                using (var stream = file.OpenReadStream())
+                {
                     var uploadParams = new ImageUploadParams
                     {
                         File = new FileDescription(file.Name, stream),
                         Folder = folderPath,
-                        PublicId= publicId,
-	                    Overwrite = true,
+                        PublicId = publicId,
+                        Overwrite = true,
                     };
 
-                    uploadResult = await cloudinary.UploadAsync(uploadParams);
+                    uploadResult = await _cloudinary.UploadAsync(uploadParams);
                     return uploadResult;
-                } 
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return uploadResult;
-			}
-            
+            }
+
         }
 
         public async Task<DeletionResult> DeleteImageAsync(string publicId)
@@ -80,12 +75,12 @@ namespace c_sharp_eCommerce.Services
             try
             {
                 var deleteParams = new DeletionParams(publicId);
-                var destoryResult = await cloudinary.DestroyAsync(deleteParams);
+                var destoryResult = await _cloudinary.DestroyAsync(deleteParams);
                 return destoryResult;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-				Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
                 return new DeletionResult
                 {
                     Result = "error",
@@ -94,8 +89,8 @@ namespace c_sharp_eCommerce.Services
                         Message = ex.Message,
                     }
                 };
-			}
-            
+            }
+
         }
         // publicId for delete not like for update, for update wouldnt require u folder path, for delete it does.
         public string GetImagePublicId(string imageUrl, string folderPath)

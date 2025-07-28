@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\c-shap-eCommerce.Core\c-sharp-eCommerce.Core.csproj" />
+    <ProjectReference Include="..\c-sharp-eCommerce.Core\c-sharp-eCommerce.Core.csproj" />
   </ItemGroup>
 
 </Project>

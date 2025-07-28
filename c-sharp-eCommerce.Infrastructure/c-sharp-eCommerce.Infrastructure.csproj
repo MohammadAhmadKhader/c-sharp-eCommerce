@@ -16,11 +16,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MySql.EntityFrameworkCore" Version="6.0.27" />
+    <!-- <PackageReference Include="MySql.EntityFrameworkCore" Version="6.0.27" /> -->
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\c-shap-eCommerce.Core\c-sharp-eCommerce.Core.csproj" />
+    <ProjectReference Include="..\c-sharp-eCommerce.Core\c-sharp-eCommerce.Core.csproj" />
     <ProjectReference Include="..\c-sharp-eCommerce.Services\c-sharp-eCommerce.Services.csproj" />
   </ItemGroup>
 

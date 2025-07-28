@@ -1,38 +1,35 @@
-﻿using c_shap_eCommerce.Core.IServices;
-using c_shap_eCommerce.Core.Models;
+﻿using c_sharp_eCommerce.Core.DTOs.Tokens;
+using c_sharp_eCommerce.Core.IServices;
+using c_sharp_eCommerce.Core.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace c_sharp_eCommerce.Services
 {
 	public class TokenService : ITokenService
 	{
-		private readonly IConfiguration configuration;
-		private readonly string secretKey;
-		private readonly UserManager<User> userManager;
-        private readonly IHttpContextAccessor httpContextAccessor;
-        public TokenService(IConfiguration configuration, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
+		private readonly IConfiguration _configuration;
+		private readonly string _secretKey;
+		private readonly UserManager<User> _userManager;
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		public TokenService(IConfiguration configuration, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
 		{
-			this.configuration = configuration;
-			this.secretKey = configuration.GetSection("ApiSettings")["JWTSecretKey"];
-			this.userManager = userManager;
-			this.httpContextAccessor = httpContextAccessor;
+			_configuration = configuration;
+			_secretKey = configuration.GetSection("ApiSettings")["JWTSecretKey"];
+			_userManager = userManager;
+			_httpContextAccessor = httpContextAccessor;
 		}
 
 		public async Task<string> CreateTokenAsync(User user)
 		{
-			var key = Encoding.ASCII.GetBytes(secretKey);
+			var key = Encoding.ASCII.GetBytes(_secretKey);
 
-			var roles = await userManager.GetRolesAsync(user);
+			var roles = await _userManager.GetRolesAsync(user);
 			var claims = new List<Claim>
 			{
 				new Claim(ClaimTypes.Name, user.UserName),
@@ -57,12 +54,12 @@ namespace c_sharp_eCommerce.Services
 
 		public TokenData GetTokenData()
 		{
-            var userEmail = httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
-			var userName = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userId = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-            Console.WriteLine(userId);
+			var userEmail = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
+			var userName = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			var userId = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+			Console.WriteLine(userId);
 
-            return new TokenData { UserId = userId, Email = userEmail, UserName= userName };
+			return new TokenData { UserId = userId!, Email = userEmail!, UserName = userName! };
 		}
 	}
 }
