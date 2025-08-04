@@ -1,9 +1,10 @@
 ﻿using c_sharp_eCommerce.Core.DTOs.Tokens;
 using c_sharp_eCommerce.Core.IServices;
 using c_sharp_eCommerce.Core.Models;
+using c_sharp_eCommerce.Services.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,21 +14,22 @@ namespace c_sharp_eCommerce.Services
 {
 	public class TokenService : ITokenService
 	{
-		private readonly IConfiguration _configuration;
-		private readonly string _secretKey;
+		private readonly ApiSettings _apiSettings;
 		private readonly UserManager<User> _userManager;
 		private readonly IHttpContextAccessor _httpContextAccessor;
-		public TokenService(IConfiguration configuration, UserManager<User> userManager, IHttpContextAccessor httpContextAccessor)
+		public TokenService(
+			UserManager<User> userManager,
+			IHttpContextAccessor httpContextAccessor,
+			IOptions<ApiSettings> apiSettings)
 		{
-			_configuration = configuration;
-			_secretKey = configuration.GetSection("ApiSettings")["JWTSecretKey"];
+			_apiSettings = apiSettings.Value;
 			_userManager = userManager;
 			_httpContextAccessor = httpContextAccessor;
 		}
 
 		public async Task<string> CreateTokenAsync(User user)
 		{
-			var key = Encoding.ASCII.GetBytes(_secretKey);
+			var key = Encoding.ASCII.GetBytes(_apiSettings.JWTSecretKey);
 
 			var roles = await _userManager.GetRolesAsync(user);
 			var claims = new List<Claim>

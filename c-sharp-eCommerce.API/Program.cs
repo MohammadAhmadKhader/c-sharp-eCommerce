@@ -16,6 +16,9 @@ using CloudinaryDotNet;
 using c_sharp_eCommerce.Infrastructure.Middlewares;
 using c_sharp_eCommerce.API.Services.Validations;
 using c_sharp_eCommerce.Core.DTOs.ApiResponse;
+using c_sharp_eCommerce.Services.Extensions;
+using System.Net;
+using c_sharp_eCommerce.Services.Options;
 
 namespace c_sharp_eCommerce.API
 {
@@ -40,6 +43,7 @@ namespace c_sharp_eCommerce.API
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddAppOptions(builder.Configuration);
 
             builder.Services.AddResponseCaching();
             builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
@@ -75,12 +79,7 @@ namespace c_sharp_eCommerce.API
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(options =>
             {
-                var key = builder.Configuration.GetValue<string>("ApiSettings:JWTSecretKey");
-                if (string.IsNullOrEmpty(key))
-                {
-                    throw new ArgumentNullException(nameof(key));
-                }
-
+                var apiSettings = builder.Configuration.GetSection(nameof(ApiSettings)).Get<ApiSettings>();
                 options.RequireHttpsMetadata = false;
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -88,7 +87,7 @@ namespace c_sharp_eCommerce.API
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(apiSettings.JWTSecretKey)),
                 };
             });
 
@@ -99,7 +98,7 @@ namespace c_sharp_eCommerce.API
                 options.InvalidModelStateResponseFactory = (ActionContext) =>
                 {
                     var errorsMessages = ValidationHelper.GetValidationErrors(ActionContext);
-                    var response = new ApiValidationResponse(System.Net.HttpStatusCode.BadRequest, errorsMessages);
+                    var response = new ApiValidationResponse(HttpStatusCode.BadRequest, errorsMessages);
 
                     return new BadRequestObjectResult(response);
                 };

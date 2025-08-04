@@ -2,7 +2,8 @@
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using c_sharp_eCommerce.Services.Options;
 
 namespace c_sharp_eCommerce.Services
 {
@@ -10,13 +11,11 @@ namespace c_sharp_eCommerce.Services
     {
         public string ProductsFolderPath { get; } = "c-sharp-ecommerce/products";
         private readonly string _cloudName = "doxhxgz2g";
-        private readonly IConfiguration _configuration;
         private readonly Cloudinary _cloudinary;
-        public ImageService(IConfiguration configuration)
+        public ImageService(IOptions<CloudinarySettings> cloudinarySettings)
         {
-            _configuration = configuration;
-            var apiKey = configuration.GetSection("CloudinarySettings")["ApiKey"];
-            var apiSecret = configuration.GetSection("CloudinarySettings")["ApiSecret"];
+            var apiKey = cloudinarySettings.Value.ApiKey;
+            var apiSecret = cloudinarySettings.Value.ApiSecret;
 
             var account = new Account(_cloudName, apiKey, apiSecret);
             _cloudinary = new Cloudinary(account);
